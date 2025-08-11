@@ -82,9 +82,11 @@ jobs:
       - name: List build output (debug)
         run: |
           echo "=== Build output structure ==="
-          find src-tauri/target -name "*.dmg" -o -name "*.app" -o -name "*.msi" -o -name "*.exe" | head -20
-          echo "=== Bundle directory ==="
-          ls -la src-tauri/target/release/bundle/ || echo "Bundle directory not found"
+          find src-tauri/target -name "*.dmg" -o -name "*.app" -o -name "*.msi" -o -name "*.exe" | grep -E "\.(dmg|app|msi)$|CodeForge.*\.exe$" | head -20
+          echo "=== Target directories ==="
+          ls -la src-tauri/target/ || echo "Target directory not found"
+          echo "=== Bundle directories ==="
+          find src-tauri/target -name "bundle" -type d | head -10
         shell: bash
 
       - name: Upload build artifacts (macOS)
@@ -92,7 +94,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.os }}
-          path: src-tauri/target/**/bundle/**/*.{dmg,app}
+          path: |
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app
           retention-days: 30
 
       - name: Upload build artifacts (Windows)
@@ -100,8 +104,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.os }}
-          path: src-tauri/target/**/bundle/**/*.{msi,exe}
+          path: |
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
           retention-days: 30
+
 
   # 创建或更新 GitHub Release
   create-release:
