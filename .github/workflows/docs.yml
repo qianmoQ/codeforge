@@ -1,0 +1,37 @@
+name: Publish docs via GitHub Pages
+
+on:
+  push:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 18.x ]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install pageforge -g
+
+      - name: Build
+        run: |
+          cd docs
+          pageforge build
+          echo 'codeforge.devlive.org' > dist/CNAME
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          publish_dir: docs/dist
